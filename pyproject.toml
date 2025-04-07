@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = { find = { where = ["src"] } }
+
+[project]
+name = "dataset_builder"
+version = "0.0.1"
+description = "A modular Python toolkit for building, analyzing, and visualizing fine-grained classification datasets from iNaturalist. Includes tools for web crawling, species filtering, class balancing, and manifest generation."
+authors = [{ name = "HoangPham6337", email = "hoangpham4171@gmail.com" }]
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+
+dependencies = [
+	"bs4>=0.0.2",
+	"pandas>=1.1.5",
+	"pyarrow>=6.0.1",
+	"matplotlib>=3.3.4",
+	"matplotlib-venn>=1.1.2",
+	"numpy>=1.19.5",
+	"pandas>=1.1.5",
+	"pyyaml>=6.0.1",
+	"requests>=2.27.1",
+	"scikit-learn>=0.24.2",
+	"tqdm"
+]
+
+[project.urls]
+Homepage = "https://github.com/HoangPham6337/iNaturelist_dataset_builder"
+Repository = "https://github.com/HoangPham6337/iNaturelist_dataset_builder"
+

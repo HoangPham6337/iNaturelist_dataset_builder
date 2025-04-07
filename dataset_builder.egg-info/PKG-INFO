@@ -1,0 +1,33 @@
+Metadata-Version: 2.4
+Name: dataset-builder
+Version: 0.0.1
+Summary: A dataset preparation and visualization toolkit for species classification, targets iNaturelist 2017 dataset.
+Home-page: https://github.com/HoangPham6337/iNaturelist_dataset_builder
+Author: Hoang Pham
+Author-email: hoangpham4171@gmail.com
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
+Requires-Dist: bs4>=0.0.2
+Requires-Dist: matplotlib>=3.3.4
+Requires-Dist: matplotlib-venn>=1.1.2
+Requires-Dist: numpy>=1.19.5
+Requires-Dist: pandas>=1.1.5
+Requires-Dist: Pillow>=8.4.0
+Requires-Dist: pyarrow>=6.0.1
+Requires-Dist: pyyaml>=6.0.1
+Requires-Dist: requests>=2.27.1
+Requires-Dist: scikit-image>=0.17.2
+Requires-Dist: scikit-learn>=0.24.2
+Requires-Dist: scipy>=1.5.4
+Requires-Dist: tqdm>=4.64.1
+Dynamic: author
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: description-content-type
+Dynamic: home-page
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary
