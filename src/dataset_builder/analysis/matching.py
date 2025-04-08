@@ -16,7 +16,7 @@ def _aggregate_all_species(species_data: SpeciesDict, target_classes: List[str] 
     """
     species_set = set()
     for species_class, species_list in species_data.items():
-        if species_class in target_classes:
+        if species_class not in target_classes:
             continue
         species_set.update(species_list)
     return species_set
@@ -63,8 +63,8 @@ def cross_reference_set(
         as values and the total number of matches.
     """
 
-    species_set_1 = _aggregate_all_species(species_dict_1)
-    species_set_2 = _aggregate_all_species(species_dict_2)
+    species_set_1 = _aggregate_all_species(species_dict_1, target_classes)
+    species_set_2 = _aggregate_all_species(species_dict_2, target_classes)
     matches, unmatched = _find_set_matches_differences(
         species_set_1, species_set_2)
     # Union class to cover all unique classes from both dicts

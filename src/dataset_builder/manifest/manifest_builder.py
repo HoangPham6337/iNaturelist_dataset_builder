@@ -135,7 +135,8 @@ def _write_species_lists(
         os.makedirs(species_dir, exist_ok=True)
         file_name = os.path.join(species_dir, "images.parquet")
 
-        save_manifest_parquet(tuple_list, file_name)
+        # save_manifest_parquet(tuple_list, file_name)
+        write_data_to_json(file_name, "Per-species data", tuple_list, False)
 
         # with open(os.path.join(species_dir, "images.txt"), "w") as file:
         #     file.write("\n".join(tuple_list))

@@ -84,7 +84,7 @@ def load_manifest_parquet(path: str) -> List[Tuple[str, int]]:
     return list(df.itertuples(index=False, name=None))
 
 
-def write_data_to_json(file_output_path: str, display_name: str, species_data) -> None:
+def write_data_to_json(file_output_path: str, display_name: str, species_data, verbose: bool = True) -> None:
     """
     Writes data to a JSON file.
 
@@ -101,7 +101,7 @@ def write_data_to_json(file_output_path: str, display_name: str, species_data) -
         with open(file_output_path, "w", encoding="utf-8") as f:
             json.dump(species_data, f, indent=4)
 
-        print(f"{display_name} → {file_output_path}")
+        log(f"{display_name} → {file_output_path}", verbose)
     except IOError as e:
         log(f"Error writing to file {file_output_path}: {e}", True, "ERROR")
 
