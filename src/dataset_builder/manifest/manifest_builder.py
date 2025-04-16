@@ -5,8 +5,7 @@ from typing import Dict, List, Optional, Set, Tuple
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
-from dataset_builder.core.exceptions import FailedOperation
-from dataset_builder.core.utility import save_manifest_parquet, write_data_to_json
+from dataset_builder.core.utility import save_manifest_parquet, write_data_to_json, log
 from dataset_builder.manifest.identifying_dominant_species import (
     _identifying_dominant_species,
 )
@@ -60,14 +59,10 @@ def _collect_images_by_dominance(
     dominant_set: Optional[Set[str]] = set(dominant_species.get(class_name, [])) if dominant_species else None
 
     if dominant_set is None:
-        raise FailedOperation("No dominance species detected, double check the dataset.")
-
-    # First pass: dominant species
-    for species in sorted(os.listdir(dataset_path)):
-        species_path = os.path.join(dataset_path, species)
-        if not os.path.isdir(species_path):
-            continue
-        if species in dominant_set:
+        for species in sorted(os.listdir(dataset_path)):
+            species_path = os.path.join(dataset_path, species)
+            if not os.path.isdir(species_path):
+                continue
             label = species_to_id.setdefault(species, current_id)
             if label == current_id:
                 species_dict[current_id] = species
@@ -75,20 +70,35 @@ def _collect_images_by_dominance(
             for img_file in os.listdir(species_path):
                 img_path = os.path.join(species_path, img_file)
                 image_list.append((img_path, label))
+    else:
 
-    # Second pass: non-dominant species → "Other"
-    other_label = sum(len(species_list) for species_list in dominant_species.values())  # type: ignore
-    for species in os.listdir(dataset_path):
-        species_path = os.path.join(dataset_path, species)
-        if not os.path.isdir(species_path):
-            continue
-        if species not in dominant_set:
-            for img_file in os.listdir(species_path):
-                img_path = os.path.join(species_path, img_file)
-                image_list.append((img_path, other_label))
+        # First pass: dominant species
+        for species in sorted(os.listdir(dataset_path)):
+            species_path = os.path.join(dataset_path, species)
+            if not os.path.isdir(species_path):
+                continue
+            if species in dominant_set:
+                label = species_to_id.setdefault(species, current_id)
+                if label == current_id:
+                    species_dict[current_id] = species
+                    current_id += 1
+                for img_file in os.listdir(species_path):
+                    img_path = os.path.join(species_path, img_file)
+                    image_list.append((img_path, label))
 
-    if "Other" not in species_dict.values():
-        species_dict[other_label] = "Other"
+        # Second pass: non-dominant species → "Other"
+        other_label = sum(len(species_list) for species_list in dominant_species.values())  # type: ignore
+        for species in os.listdir(dataset_path):
+            species_path = os.path.join(dataset_path, species)
+            if not os.path.isdir(species_path):
+                continue
+            if species not in dominant_set:
+                for img_file in os.listdir(species_path):
+                    img_path = os.path.join(species_path, img_file)
+                    image_list.append((img_path, other_label))
+
+        if "Other" not in species_dict.values():
+            species_dict[other_label] = "Other"
 
     return current_id
 
@@ -169,8 +179,13 @@ def run_manifest_generator(
         FailedOperation: If there are issues processing the dataset or saving the manifest.
     """
     os.makedirs(output_dir, exist_ok=True)
+    include_all = threshold == 1.0
 
-    dominant_species = _identifying_dominant_species(dataset_properties_path, threshold, target_classes)
+    if not include_all:
+        dominant_species = _identifying_dominant_species(dataset_properties_path, threshold, target_classes)
+    else:
+        dominant_species = None
+        log("Selecting the entire dataset, no 'Other' label.", True)
 
     species_to_id: Dict[str, int] = {}
     species_dict: Dict[int, str] = {}
@@ -217,6 +232,7 @@ def run_manifest_generator(
 
     _write_species_lists(output_dir, image_list, species_dict)
 
+    label = "(no 'Other')" if include_all else "(with 'Other')"
     print(f"Dominant manifest created in: {output_dir}")
-    print(f"Total species (with 'Other'): {len(species_dict)}")
+    print(f"Total species {label}: {len(species_dict)}")
     print(f"Total Images: {len(image_list)} | Train: {len(train_data)} | Val: {len(val_data)}")

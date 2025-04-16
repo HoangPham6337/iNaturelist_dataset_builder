@@ -95,8 +95,8 @@ def validate_config(config):
 
     if not isinstance(train_size, float) or not (0 < train_size and train_size < 1):
         raise ConfigError("'train_size' should be a float between 0 and 1")
-    if not isinstance(dominant_threshold, float) or not (0 < dominant_threshold and dominant_threshold < 1):
-        raise ConfigError("'dominant_threshold' should be a float between 0 and 1")
+    if not isinstance(dominant_threshold, float) or not (0 < dominant_threshold and dominant_threshold <= 1):
+        raise ConfigError("'dominant_threshold' should be a float between 0 and 1 (inclusive)")
     if not isinstance(randomness, int):
         raise ConfigError("'random_state' should be an integer")
 
