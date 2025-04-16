@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib_venn import venn2
+from collections import defaultdict
 
 from dataset_builder.analysis.matching import _aggregate_all_species
 from dataset_builder.core.utility import (
@@ -255,6 +256,86 @@ def _visualizing_ppf(
         plt.show()
 
 
+def visualizing_ppf_many(
+        properties_json_path: str,
+        class_list_to_analyze: List[str],
+        save_path: Optional[str] = None,
+        verbose: bool = False,
+        overwrite: bool = False
+) -> None:
+    """
+    Generates and visualizes a CDF/PPF curve for the species distribution within a given class.
+
+    The function reads species data, computes cumulative distribution function (CDF) values, 
+    and plots a PPF (Percentage of Population Function) curve for the species class. It also 
+    marks and annotates the number of species needed to reach specific cumulative percentages.
+
+    Args:
+        properties_json_path: Path to the JSON file containing species data.
+        class_to_analyze: The species class to analyze (e.g., "Aves").
+        save_path: Path to save the plot image. Defaults to None, which displays the plot.
+        verbose: Whether to log detailed information. Defaults to False.
+        overwrite: Whether to overwrite an existing file if the save path exists. Defaults to False.
+    """
+    if save_path and os.path.isfile(save_path) and not overwrite:
+        log(f"{os.path.basename(save_path)} already exists, skipping", True, "INFO")
+        return
+    
+    total_species_count = defaultdict(int)
+
+    for class_name in class_list_to_analyze:
+        result = _prepare_data_cdf_ppf(properties_json_path, class_name)
+    # Allow for failing
+        if result is None:
+            log(f"No data found for {class_list_to_analyze}", True, "WARNING")
+            continue
+
+        species_names, sorted_image_counts = result
+        for name, count in zip(species_names, sorted_image_counts):
+            total_species_count[name] += count
+    
+    sorted_items = sorted(total_species_count.items(), key=lambda x: x[1], reverse=True)
+    species_names, image_counts = zip(*sorted_items)
+
+    total_images = sum(image_counts)
+    cumulative_images = np.cumsum(image_counts) 
+    cdf_values = cumulative_images / total_images
+
+    species_num = len(species_names)
+    species_indices = np.arange(1, species_num + 1)
+
+    thresholds = [0.5, 0.8, 0.9]
+    plt.figure(figsize=(30, 18))
+
+    for threshold in thresholds:
+        idx = np.argmax(cdf_values >= threshold)
+        species_needed = int(idx + 1)
+        cdf_reached = cdf_values[idx]
+
+        plt.plot(species_indices, cdf_values, marker='.', linestyle="-")
+
+        _print_on_plot(species_needed, cdf_reached, species_num)
+
+    plt.scatter(species_num, cdf_values[species_num - 1], color="black", zorder=5)
+    plt.text(species_num + 1, cdf_values[species_num - 1], f"{species_num} species", fontsize=20, va="top")
+
+    plt.xlabel("Number of species (ranked by image count)", fontsize=20)
+    plt.ylabel("Cumulative percentage of images", fontsize=20)
+    plt.title(f"Cumulative Composition Curve for {class_list_to_analyze}")
+
+    _plot_axh_line(0.5, "50%")
+    _plot_axh_line(0.8, "80%")
+    _plot_axh_line(0.9, "90%")
+
+    if save_path:
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        plt.savefig(save_path, bbox_inches="tight")
+        log(f"PPF plot saved to {save_path}", verbose)
+        plt.close()
+    else:
+        plt.show()
+
+
 def _visualize_class(
         properties_file: str,
         species_class: str,
@@ -334,9 +415,6 @@ def run_visualization(
 
     os.makedirs(export_dir, exist_ok=True)
 
-    src_file = os.path.join(output_dir, f"{src_dataset_name}_species.json")  # Original dataset
-    dst_file = os.path.join(output_dir, f"{dst_dataset_name}_species.json")  # Filtered original dataset
-
     properties_file_1 = os.path.join(output_dir, f"{src_dataset_name}_composition.json")
     properties_file_2 = os.path.join(output_dir, f"{dst_dataset_name}_composition.json")
 
@@ -351,11 +429,3 @@ def run_visualization(
             [(properties_file_2, species_class, export_dir, dst_dataset_name, verbose, overwrite) for species_class in target_classes_dst]
         )
 
-    # venn_diagram(
-    #     src_file,
-    #     dst_file,
-    #     src_dataset_name,
-    #     dst_dataset_name,
-    #     "Species Overlap Between Datasets",
-    #     save_path=os.path.join(export_dir, f"{src_dataset_name}_vs_{dst_dataset_name}_venn.png")
-    # )
