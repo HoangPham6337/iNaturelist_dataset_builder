@@ -103,13 +103,16 @@ def _collect_images_by_dominance(
     return current_id
 
 
-def _write_species_composition(output_path: str, image_list: List[Tuple[str, int]], species_dict: Dict[int, str]):
+def _generate_species_composition(
+    image_list: List[Tuple[str, int]], 
+    species_dict: Dict[int, str]
+) -> Dict[str, int]:
     species_composition: Dict[str, int] = {}
     for species_label, species_name in species_dict.items():
         current_species = [1 for label in image_list if label[1] == species_label]
         total_species = sum(current_species)
         species_composition[species_name] = total_species
-    write_data_to_json(output_path, "species_composition", species_composition)
+    return species_composition
 
 def _write_species_lists(
     base_output_path: str,
@@ -159,24 +162,54 @@ def run_manifest_generator(
     train_size: float,
     random_state: int,
     target_classes: List[str],
-    threshold: float
-):
+    threshold: float,
+    per_species_list: bool = False,
+    export: bool = True,
+) -> Tuple[List[Tuple[str, int]], List[Tuple[str, int]], List[Tuple[str, int]], Dict[str, int]]:
     """
-    Generates a dataset manifest of image paths and labels. Splits the dataset 
-    into training and validation sets based on the dominant threshold and saves
-    species data to Parquet and JSON files.
+    Generates dataset manifests and species composition files from a folder structure.
+
+    This function reads a dataset organized into per-species subfolders, optionally filters the dataset 
+    based on dominant species (species with a number of images above a given threshold), splits the 
+    dataset into training and validation sets, and saves the results into Parquet and JSON files.
 
     Args:
-        data_dir: The directory containing species class folders.
-        output_dir: The directory to save the output manifests and species data.
-        dataset_properties_path: Path to the properties file containing dataset information.
-        train_size: The proportion of the dataset to use for training.
-        random_state: Random seed for reproducibility of train/test split.
-        target_classes: List of species classes to include in the manifest.
-        threshold: The threshold for identifying dominant species based on image count.
+        data_dir (str): Path to the root directory containing species class folders.
+        output_dir (str): Path to the directory where output files (manifests and metadata) will be saved.
+        dataset_properties_path (str): Path to a JSON file containing dataset statistics used to determine dominant species.
+        train_size (float): Proportion of the dataset to allocate to the training set (the remainder goes to validation).
+        random_state (int): Random seed to ensure reproducibility of the train/validation split.
+        target_classes (List[str]): List of species classes to consider for manifest generation.
+        threshold (float): Dominance threshold. If less than 1.0, species below this threshold are grouped under 'Other'.
+                        If exactly 1.0, no 'Other' group is created and all species are included.
+        per_species_list (bool, optional): If True, exports a per-species list of images. Defaults to False.
+        export (bool, optional): If True, saves the manifests and species composition files to disk. Defaults to True.
+
+    Returns:
+        Tuple[
+            List[Tuple[str, int]],
+            List[Tuple[str, int]],
+            List[Tuple[str, int]],
+            Dict[str, int]
+        ]
+
+        A tuple containing:
+            - The complete list of images and their labels.
+            - The training split of the dataset.
+            - The validation split of the dataset.
+            - A dictionary mapping species names to their image count.
 
     Raises:
-        FailedOperation: If there are issues processing the dataset or saving the manifest.
+        FailedOperation: If an error occurs during data processing or file saving.
+
+    Notes:
+        - Saves the following files if `export` is True:
+            - `dataset_species_labels.json`: Mapping from class ID to species name.
+            - `dataset_manifest.parquet`: Full dataset manifest.
+            - `train.parquet` and `val.parquet`: Training and validation manifests.
+            - `species_composition.json`: Species-wise image counts.
+            - (optional) per-species image lists under the `species_lists/` subfolder.
+        - If the threshold is set to 1.0, no images are reassigned to an 'Other' class.
     """
     os.makedirs(output_dir, exist_ok=True)
     include_all = threshold == 1.0
@@ -208,12 +241,8 @@ def run_manifest_generator(
         )
     species_dict = dict(sorted(species_dict.items()))
 
-    save_manifest_parquet(image_list, os.path.join(output_dir, "dataset_manifest.parquet"))
 
-    with open(os.path.join(output_dir, "dominant_labels.json"), "w", encoding="utf-8") as file:
-        json.dump(species_dict, file, indent=4)
-    
-    _write_species_composition(os.path.join(output_dir, "species_composition.json"), image_list, species_dict)
+    species_composition = _generate_species_composition(image_list, species_dict)
 
     train_data, val_data = train_test_split(
         image_list,
@@ -227,12 +256,16 @@ def run_manifest_generator(
     ) as file:
         json.dump(species_dict, file, indent=4)
 
-    save_manifest_parquet(train_data, os.path.join(output_dir, "train.parquet"))
-    save_manifest_parquet(val_data, os.path.join(output_dir, "val.parquet"))
-
-    _write_species_lists(output_dir, image_list, species_dict)
+    if export:
+        save_manifest_parquet(image_list, os.path.join(output_dir, "dataset_manifest.parquet"))
+        print(f"Dominant manifest created in: {output_dir}")
+        save_manifest_parquet(train_data, os.path.join(output_dir, "train.parquet"))
+        save_manifest_parquet(val_data, os.path.join(output_dir, "val.parquet"))
+        write_data_to_json(os.path.join(output_dir, "species_composition.json"), "species_composition", species_composition)
+        if per_species_list:
+            _write_species_lists(output_dir, image_list, species_dict)
 
     label = "(no 'Other')" if include_all else "(with 'Other')"
-    print(f"Dominant manifest created in: {output_dir}")
     print(f"Total species {label}: {len(species_dict)}")
     print(f"Total Images: {len(image_list)} | Train: {len(train_data)} | Val: {len(val_data)}")
+    return image_list, train_data, val_data, species_composition
