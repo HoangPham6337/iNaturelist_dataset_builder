@@ -280,12 +280,11 @@ The pipeline generates:
 - Train/val manifest `.txt` files
 ## Roadmap
 
-- [ ] Simplify `config.yaml` structure: group related options, add environmental variable support, introduce profiles (e.g., dev/prod).
-- [ ] Add advanced options to `train_val_split`: support stratified splitting, per-class balancing, and deterministic sampling for reproducibility.
-- [ ] Auto-generate `config.yaml` step-by-step from terminal prompts.
-- [ ] Built-in summary report: after pipeline finishes, output a Markdown or HTML report: species count, splits, coverage, etc.
-- [ ] Add optional CLI interface for each stage.
-- [ ] Add support for export all manifests in Parquet format regardless of path format.
+- [x] Simplify `config.yaml` structure: group related options, add environmental variable support, introduce profiles (e.g., dev/prod).
+- [x] Add advanced options to `train_val_split`: support stratified splitting, per-class balancing, and deterministic sampling for reproducibility.
+- [x] Auto-generate `config.yaml` step-by-step from terminal prompts.
+- [x] Built-in summary report: after pipeline finishes, output a Markdown or HTML report: species count, splits, coverage, etc. (show logs after each run)
+- [x] Add support for export all manifests in Parquet format regardless of path format.
 ## Contributing
 
 Contributions are welcome!
