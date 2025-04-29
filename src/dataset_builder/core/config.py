@@ -2,12 +2,13 @@ import os
 import re
 from typing import Any, List
 
-import yaml
+import yaml  #type: ignore
 
 from dataclasses import dataclass, asdict
 
 from dataset_builder.core.exceptions import ConfigError
 from dataset_builder.core.utility import log
+from dataset_builder.core.utility import _str_to_bool
 
 
 def load_config(config_path: str) -> Any:
@@ -157,10 +158,8 @@ class Config:
 def build_interactive_config() -> Config:
     print("=== GLOBAL CONFIG ===")
     included = _ask("Included classes (comma-separated)", "Aves,Insecta").split(",")
-    verbose = _ask("Verbose mode?", "false", lambda x: x.lower() == "true")
-    overwrite = _ask(
-        "Overwrite existing files?", "false", lambda x: x.lower() == "true"
-    )
+    verbose = _ask("Verbose mode?", "false", _str_to_bool)
+    overwrite = _ask("Overwrite existing files?", "false", _str_to_bool)
 
     print("\n=== PATH CONFIG ===")
     src = _ask("Source dataset path", "./data/train_val_images")
