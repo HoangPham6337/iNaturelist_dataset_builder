@@ -7,7 +7,7 @@ packages = { find = { where = ["src"] } }
 
 [project]
 name = "dataset_builder"
-version = "0.0.4"
+version = "0.0.5"
 description = "A modular Python toolkit for building, analyzing, and visualizing fine-grained classification datasets from iNaturalist. Includes tools for web crawling, species filtering, class balancing, and manifest generation."
 authors = [{ name = "HoangPham6337", email = "hoangpham4171@gmail.com" }]
 readme = "README.md"

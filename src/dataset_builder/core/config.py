@@ -15,7 +15,7 @@ def load_config(config_path: str) -> Any:
     Loads a YAML configuration file and returns its contents.
 
     Args:
-        config_path: The file path to the YAML configuration file to be loaded.
+        config_path: The file pip install types-PyYAMLpath to the YAML configuration file to be loaded.
 
     Returns:
         output: The parsed contents of the YAML configuration file.
