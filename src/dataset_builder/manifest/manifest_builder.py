@@ -165,7 +165,7 @@ def run_manifest_generator(
     threshold: float,
     per_species_list: bool = False,
     export: bool = True,
-) -> Tuple[List[Tuple[str, int]], List[Tuple[str, int]], List[Tuple[str, int]], Dict[str, int]]:
+) -> Tuple[List[Tuple[str, int]], List[Tuple[str, int]], List[Tuple[str, int]], Dict[int, str], Dict[str, int]]:
     """
     Generates dataset manifests and species composition files from a folder structure.
 
@@ -190,6 +190,7 @@ def run_manifest_generator(
             List[Tuple[str, int]],
             List[Tuple[str, int]],
             List[Tuple[str, int]],
+            Dict[int, str],
             Dict[str, int]
         ]
 
@@ -197,6 +198,7 @@ def run_manifest_generator(
             - The complete list of images and their labels.
             - The training split of the dataset.
             - The validation split of the dataset.
+            - A dictionary mapping label to the species name.
             - A dictionary mapping species names to their image count.
 
     Raises:
@@ -241,7 +243,6 @@ def run_manifest_generator(
         )
     species_dict = dict(sorted(species_dict.items()))
 
-
     species_composition = _generate_species_composition(image_list, species_dict)
 
     train_data, val_data = train_test_split(
@@ -251,12 +252,11 @@ def run_manifest_generator(
         stratify=[label for _, label in image_list],
     )
 
-    with open(
-        os.path.join(output_dir, "dataset_species_labels.json"), "w", encoding="utf-8"
-    ) as file:
-        json.dump(species_dict, file, indent=4)
-
     if export:
+        with open(
+            os.path.join(output_dir, "dataset_species_labels.json"), "w", encoding="utf-8"
+        ) as file:
+            json.dump(species_dict, file, indent=4)
         save_manifest_parquet(image_list, os.path.join(output_dir, "dataset_manifest.parquet"))
         print(f"Dominant manifest created in: {output_dir}")
         save_manifest_parquet(train_data, os.path.join(output_dir, "train.parquet"))
@@ -268,4 +268,4 @@ def run_manifest_generator(
     label = "(no 'Other')" if include_all else "(with 'Other')"
     print(f"Total species {label}: {len(species_dict)}")
     print(f"Total Images: {len(image_list)} | Train: {len(train_data)} | Val: {len(val_data)}")
-    return image_list, train_data, val_data, species_composition
+    return image_list, train_data, val_data, species_dict, species_composition
