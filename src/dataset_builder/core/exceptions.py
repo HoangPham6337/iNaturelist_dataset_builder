@@ -14,12 +14,12 @@ class FailedOperation(PipelineError):
 class ConfigError(PipelineError):
     """Bad or missing configuration."""
 
-    def __init__(self, key: str):
-        super().__init__(f"Missing or invalid config key: {key}")
+    def __init__(self, message: str):
+        super().__init__(message)
 
 
 class AnalysisError(PipelineError):
     """Failure during dataset analysis or statistics."""
 
-    def __init__(self, reason: str):
-        super().__init__(f"Dataset analysis failed: {reason}")
+    def __init__(self, message: str):
+        super().__init__(message)
