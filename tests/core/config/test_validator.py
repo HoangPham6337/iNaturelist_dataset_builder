@@ -2,8 +2,10 @@ import os
 
 import pytest
 
-from dataset_builder.core.config import validate_config  # type: ignore
+from dataset_builder.core.config import validate_config, validate_dict_against_dataclass  # type: ignore
+from dataset_builder.core.config import PathsConfig, GlobalConfig, WebCrawlConfig, TrainValSplitConfig
 from dataset_builder.core.exceptions import ConfigError  # type: ignore
+from typing import Dict, Any
 
 
 def make_valid_config(base_dir):
@@ -153,3 +155,123 @@ def test_train_val_split_invalid(field, value, tmp_path):
     cfg["train_val_split"][field] = value
     with pytest.raises(ConfigError, match=field):
         validate_config(cfg)
+
+
+@pytest.fixture
+def valid_global() -> Dict[str, Any]:
+    return {
+        "included_classes": ["Aves", "Insecta"],
+        "verbose": True,
+        "overwrite": False,
+    }
+
+@pytest.fixture
+def valid_paths(tmp_path) -> Dict[str, Any]:
+    return {
+        "src_dataset": str(tmp_path / "src"),
+        "dst_dataset": str(tmp_path / "dst"),
+        "web_crawl_output_json": "crawl.json",
+        "output_dir": str(tmp_path / "out"),
+    }
+
+@pytest.fixture
+def valid_web_crawl() -> Dict[str, Any]:
+    return {
+        "total_pages": 10,
+        "base_url": "https://example.com",
+        "delay_between_requests": 2,
+    }
+
+@pytest.fixture
+def valid_train_val() -> Dict[str, Any]:
+    return {
+        "train_size": 0.8,
+        "random_state": 42,
+        "dominant_threshold": 0.5,
+    }
+
+# --- tests for non-dict input ---
+
+def test_validate_not_dict_raises():
+    with pytest.raises(ConfigError, match="root should be a dict, got list"):
+        validate_dict_against_dataclass([], GlobalConfig, path="root")
+
+# --- tests for GlobalConfig ---
+
+def test_global_valid(valid_global):
+    # Should not raise
+    validate_dict_against_dataclass(valid_global, GlobalConfig, path="global")
+
+@pytest.mark.parametrize("key", ["included_classes", "verbose", "overwrite"])
+def test_global_missing_key(valid_global, key):
+    d = valid_global.copy()
+    del d[key]
+    with pytest.raises(ConfigError, match=f"Missing key '{key}' in section 'global'"):
+        validate_dict_against_dataclass(d, GlobalConfig, path="global")
+
+def test_global_included_classes_not_list(valid_global):
+    d = valid_global.copy()
+    d["included_classes"] = "notalist"
+    with pytest.raises(ConfigError, match="global.included_classes should be a list of strings"):
+        validate_dict_against_dataclass(d, GlobalConfig, path="global")
+
+def test_global_included_classes_element_not_str(valid_global):
+    d = valid_global.copy()
+    d["included_classes"] = ["Aves", 123]
+    with pytest.raises(ConfigError, match="global.included_classes should be a list of strings"):
+        validate_dict_against_dataclass(d, GlobalConfig, path="global")
+
+def test_global_verbose_not_bool(valid_global):
+    d = valid_global.copy()
+    d["verbose"] = "yes"
+    with pytest.raises(ConfigError, match="global.verbose should be a boolean"):
+        validate_dict_against_dataclass(d, GlobalConfig, path="global")
+
+# --- tests for PathsConfig ---
+
+def test_paths_valid(valid_paths):
+    validate_dict_against_dataclass(valid_paths, PathsConfig, path="paths")
+
+@pytest.mark.parametrize("key,wrong,err", [
+    ("src_dataset", 123, "paths.src_dataset should be a string"),
+    ("dst_dataset", None, "paths.dst_dataset should be a string"),
+    ("web_crawl_output_json", ["a"], "paths.web_crawl_output_json should be a string"),
+    ("output_dir", 5.5, "paths.output_dir should be a string"),
+])
+def test_paths_wrong_type(valid_paths, key, wrong, err):
+    d = valid_paths.copy()
+    d[key] = wrong
+    with pytest.raises(ConfigError, match=err):
+        validate_dict_against_dataclass(d, PathsConfig, path="paths")
+
+# --- tests for WebCrawlConfig ---
+
+def test_web_crawl_valid(valid_web_crawl):
+    validate_dict_against_dataclass(valid_web_crawl, WebCrawlConfig, path="web_crawl")
+
+@pytest.mark.parametrize("key,wrong,err", [
+    ("total_pages", 0.0, "web_crawl.total_pages should be an integer"),
+    ("base_url", 123,      "web_crawl.base_url should be a string"),
+    ("delay_between_requests", "1", "web_crawl.delay_between_requests should be an integer"),
+])
+def test_web_crawl_wrong_type(valid_web_crawl, key, wrong, err):
+    d = valid_web_crawl.copy()
+    d[key] = wrong
+    with pytest.raises(ConfigError, match=err):
+        validate_dict_against_dataclass(d, WebCrawlConfig, path="web_crawl")
+
+# --- tests for TrainValSplitConfig ---
+
+def test_train_val_valid(valid_train_val):
+    validate_dict_against_dataclass(valid_train_val, TrainValSplitConfig, path="train_val_split")
+
+@pytest.mark.parametrize("key,wrong,err", [
+    ("train_size", "0.8", "train_val_split.train_size should be a float"),
+    ("random_state", -1.0, "train_val_split.random_state should be an integer"),
+    ("dominant_threshold", None, "train_val_split.dominant_threshold should be a float"),
+])
+def test_train_val_wrong_type(valid_train_val, key, wrong, err):
+    d = valid_train_val.copy()
+    d[key] = wrong
+    with pytest.raises(ConfigError, match=err):
+        validate_dict_against_dataclass(d, TrainValSplitConfig, path="train_val_split")
