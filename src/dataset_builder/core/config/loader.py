@@ -2,7 +2,7 @@ from typing import Any, Dict, Union
 import yaml  # type: ignore
 
 from dataclasses import asdict
-from .schema import Config
+from dataset_builder.core.config.schema import Config
 from dataset_builder.core.utility import log
 
 
