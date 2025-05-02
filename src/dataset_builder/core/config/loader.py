@@ -30,6 +30,18 @@ def load_config(config_path: str) -> Dict[str, Any]:
 
 
 def save_config(config: Union[Dict, Config], filepath="config.yaml"):
+    """
+    Write a Config or dict to a YAML file.
+
+    Args:
+        config (Union[Dict, Config]):  
+            Configuration to save; can be a Config instance or a plain dict.
+        filepath (str, optional):  
+            Destination file path. Defaults to "config.yaml".
+
+    Raises:
+        OSError: If the file can’t be written.
+    """
     with open(filepath, "w") as f:
         if isinstance(config, Config):
             yaml.safe_dump(asdict(config), f, sort_keys=False)

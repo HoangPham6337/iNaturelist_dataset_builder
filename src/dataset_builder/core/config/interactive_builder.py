@@ -23,6 +23,22 @@ def _str_to_bool(x: str) -> bool:
 
 
 def build_interactive_config() -> Config:
+    """
+    Launches an interactive command-line wizard to construct a `Config` object.
+
+    This function walks the user through each section of the configuration—
+    Global settings, Paths, Web Crawl parameters, and Train/Validation split—
+    prompting for each value (with sensible defaults).  User responses are
+    cast to the appropriate types (`bool`, `int`, `float`, or `List[str]`)
+    before assembling the final `Config` dataclass.
+
+    Returns:
+        Config: A fully populated configuration object, with:
+            - global_ (GlobalConfig): included_classes, verbose, overwrite
+            - paths (PathsConfig): src_dataset, dst_dataset, web_crawl_output_json, output_dir
+            - web_crawl (WebCrawlConfig): total_pages, base_url, delay_between_requests
+            - train_val_split (TrainValSplitConfig): train_size, random_state, dominant_threshold
+    """
     print("=== GLOBAL CONFIG ===")
     included = _ask("Included classes (comma-separated)", "Aves,Insecta").split(",")
     verbose = _ask("Verbose mode?", "false", _str_to_bool)

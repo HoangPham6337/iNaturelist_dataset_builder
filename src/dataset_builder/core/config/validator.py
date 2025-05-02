@@ -8,6 +8,17 @@ from dataclasses import is_dataclass, fields
 
 
 def validate_dict_against_dataclass(data: Dict, schema_class: type, path="root") -> None:
+    """
+    Recursively verify that `data` matches the fields and types of `schema_class`.
+
+    Args:
+        data (Dict): The raw section to check.
+        schema_class (type): A dataclass type whose fields define the expected keys and types.
+        path (str): Dot-separated path for error reporting.
+
+    Raises:
+        ConfigError: If `data` is not a dict, is missing a required key, or if a value has the wrong primitive type or unsupported type.
+    """
     if not isinstance(data, dict):
         raise ConfigError(f"{path} should be a dict, got {type(data).__name__}")
 
@@ -50,12 +61,30 @@ def validate_dict_against_dataclass(data: Dict, schema_class: type, path="root")
 
 
 def validate_global_rules(config: Dict):
+    """
+    Enforce semantic rules on the 'global' section.
+
+    Args:
+        config (Dict): Full raw config dict.
+
+    Raises:
+        ConfigError: If 'included_classes' is empty.
+    """
     global_cfg = config["global"]
     if len(global_cfg["included_classes"]) == 0:
         raise ConfigError("'included_classes' should contain at least one entry")
 
 
 def validate_path_rules(config: Dict):
+    """
+    Ensure required filesystem paths exist.
+
+    Args:
+        config (Dict): Full raw config dict.
+
+    Raises:
+        ConfigError: If any of src_dataset, dst_dataset, or output_dir is missing or not a dir.
+    """
     path_cfg = config["paths"]
     for path in [
         path_cfg["src_dataset"],
@@ -67,6 +96,15 @@ def validate_path_rules(config: Dict):
 
 
 def validate_web_crawl_rules(config: Dict):
+    """
+    Enforce semantic rules on the 'web_crawl' section.
+
+    Args:
+        config (Dict): Full raw config dict.
+
+    Raises:
+        ConfigError: For invalid URL scheme, non-positive total_pages or delay.
+    """
     wc_config = config["web_crawl"]
     base_url = wc_config.get("base_url", None)
     total_pages = wc_config.get("total_pages", None)
@@ -81,6 +119,15 @@ def validate_web_crawl_rules(config: Dict):
 
 
 def validate_train_val_split_rules(config: Dict):
+    """
+    Enforce semantic rules on the 'train_val_split' section.
+
+    Args:
+        config (Dict): Full raw config dict.
+
+    Raises:
+        ConfigError: If train_size or dominant_threshold are out of (0,1] range, or if random_state is negative.
+    """
     tvs_config = config["train_val_split"]
     train_size = tvs_config.get("train_size", None)
     randomness = tvs_config.get("random_state", None)
@@ -95,6 +142,15 @@ def validate_train_val_split_rules(config: Dict):
 
 
 def validate_all_group_exists(config: Dict):
+    """
+    Check that all required top-level sections are present.
+
+    Args:
+        config (Dict): Full raw config dict.
+
+    Raises:
+        ConfigError: If any of 'global', 'paths', 'web_crawl', or 'train_val_split' is missing.
+    """
     groups = ["global", "paths", "web_crawl", "train_val_split"]
     for group in groups:
         if group not in config:
@@ -102,12 +158,35 @@ def validate_all_group_exists(config: Dict):
 
 
 def is_config_dict(raw_config: Any):
+    """
+    Quick check that the loaded config is a dict.
+
+    Args:
+        raw_config (Any): The object returned by load_config().
+
+    Returns:
+        bool: True if it's a dict, False otherwise.
+    """
     if not isinstance(raw_config, dict):
         return False
     return True
 
 
 def validate_config(raw_config: Dict) -> None:
+    """
+    Full config validation pipeline:
+
+      1. Ensure the config is a dict.
+      2. Check for all required top-level sections.
+      3. Validate each section's structure against its dataclass schema.
+      4. Apply semantic rules on each section.
+
+    Args:
+        raw_config (Dict): The nested dict loaded from YAML.
+
+    Raises:
+        ConfigError: On any missing section, field, type mismatch, or rule violation.
+    """
     if not is_config_dict(raw_config):
         raise ConfigError("Config is not a dictionary")
     # validate top structures
