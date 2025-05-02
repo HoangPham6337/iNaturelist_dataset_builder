@@ -179,13 +179,3 @@ def cleanup(**remove_paths):
     """
     for path in remove_paths:
         shutil.rmtree(path)
-
-
-def _str_to_bool(x: str) -> bool:
-    x = x.strip().lower()
-    if x in {"true", "yes", "1"}:
-        return True
-    elif x in {"false", "no", "0"}:
-        return False
-    else:
-        raise ValueError(f"Invalid boolean value: {x}")
