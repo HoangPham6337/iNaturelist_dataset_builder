@@ -5,6 +5,12 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools]
 packages = { find = { where = ["src"] } }
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra -q"
+pythonpath = ["src"]
+
+
 [project]
 name = "dataset_builder"
 version = "0.0.5"
@@ -31,4 +37,3 @@ dependencies = [
 [project.urls]
 Homepage = "https://github.com/HoangPham6337/iNaturelist_dataset_builder"
 Repository = "https://github.com/HoangPham6337/iNaturelist_dataset_builder"
-
