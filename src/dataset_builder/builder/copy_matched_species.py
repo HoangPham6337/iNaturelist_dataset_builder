@@ -3,7 +3,7 @@ import shutil
 from tqdm import tqdm
 from typing import List
 from dataset_builder.core.log import log
-from dataset_builder.core.utility import SpeciesDict, read_species_from_json, _is_species_dict
+from dataset_builder.core.utility import SpeciesDict, read_species_from_json, _is_a_valid_species_dict
 from dataset_builder.core.exceptions import FailedOperation
 
 def run_copy_matched_species(
@@ -33,7 +33,7 @@ def run_copy_matched_species(
         raise FailedOperation("Cannot find matched species JSON. Cannot proceed with copying matched species")
 
     matched_species: SpeciesDict = read_species_from_json(matched_species_json)
-    if not _is_species_dict(matched_species):
+    if not _is_a_valid_species_dict(matched_species):
         raise FailedOperation("Invalid matched species JSON format, please check the file.")
     
 

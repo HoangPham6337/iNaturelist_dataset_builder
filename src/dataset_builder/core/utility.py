@@ -1,12 +1,9 @@
 import json
 import os
 import shutil
-from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
-import yaml  # type: ignore
-from tqdm import tqdm  # type: ignore
 
 from dataset_builder.core.log import log
 
@@ -41,12 +38,12 @@ def _is_json_file(json_path: str) -> bool:
     return False
 
 
-def _is_species_dict(obj: Any) -> bool:
+def _is_a_valid_species_dict(obj: Any) -> bool:
     """
     Checks if the given object is a valid species dictionary.
 
-    The object must be a dictionary where keys are strings (species classes) 
-    and values are lists of species names (strings).
+    The object must be a dictionary where keys are strings (non-null) (species classes) 
+    and values are lists of species names (non-null strings).
 
     Args:
         obj (Any): The object to check.
@@ -61,6 +58,11 @@ def _is_species_dict(obj: Any) -> bool:
             return False
         if not all(isinstance(species, str) for species in v):
             return False
+        if len(k) == 0:
+            return False
+        for item in v:
+            if len(item.strip()) == 0:
+                return False 
     return True
 
 
