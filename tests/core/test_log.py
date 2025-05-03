@@ -1,4 +1,3 @@
-import pytest
 import os
 from datetime import datetime as real_datetime
 from dataset_builder.core import log as log_mod  # type: ignore
