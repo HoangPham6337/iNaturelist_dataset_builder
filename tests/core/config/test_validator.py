@@ -6,6 +6,7 @@ from dataset_builder.core.config import validate_config, validate_dict_against_d
 from dataset_builder.core.config import PathsConfig, GlobalConfig, WebCrawlConfig, TrainValSplitConfig
 from dataset_builder.core.exceptions import ConfigError  # type: ignore
 from typing import Dict, Any
+from dataclasses import dataclass
 
 
 def make_valid_config(base_dir):
@@ -275,3 +276,48 @@ def test_train_val_wrong_type(valid_train_val, key, wrong, err):
     d[key] = wrong
     with pytest.raises(ConfigError, match=err):
         validate_dict_against_dataclass(d, TrainValSplitConfig, path="train_val_split")
+
+
+@dataclass
+class Inner:
+    foo: int
+
+
+@dataclass
+class Outer:
+    inner: Inner
+    name: str
+
+
+@dataclass
+class Unsupported:
+    data: Dict[str, int]
+
+
+def test_recursive_valid():
+    data = {"inner": {"foo": 42}, "name": "example"}
+    validate_dict_against_dataclass(data, Outer, path="outer")
+
+
+@pytest.mark.parametrize("bad_inner", [
+    {},
+    {"foo": "a_string"}
+])
+def test_recursive_invalid(bad_inner):
+    data = {"inner": bad_inner, "name": "something"}
+    with pytest.raises(ConfigError) as exc:
+        validate_dict_against_dataclass(data, Outer, path="outer")
+    msg = str(exc.value)
+    assert "Missing key 'foo' in section 'outer.inner'" in msg or "outer.inner.foo should be an integer" in msg
+
+
+def test_outer_missing_name():
+    data = {"inner": {"foo": 1}}
+    with pytest.raises(ConfigError, match="Missing key 'name' in section 'outer'"):
+        validate_dict_against_dataclass(data, Outer, "outer")
+
+
+def test_unsupported_field_type():
+    payload = {"data": {"a": 1}}
+    with pytest.raises(ConfigError, match="Unsupported field type"):
+        validate_dict_against_dataclass(payload, Unsupported, "unsupported")
