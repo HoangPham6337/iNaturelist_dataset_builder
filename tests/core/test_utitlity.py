@@ -235,6 +235,18 @@ def test_read_species_from_json_errors(tmp_path, capsys):
     assert "Invalid JSON format" in out or "Error reading" in out
 
 
+def test_write_data_to_json_file_not_exist(tmp_path, capsys, monkeypatch):
+    out = tmp_path / "nested" / "out.json"
+    def fake_makedirs(path, exist_ok=False):
+        raise IOError("Cannot create directory")
+    monkeypatch.setattr(os, "makedirs", fake_makedirs)
+
+    write_data_to_json(str(out), "MyDump", {"key": "value"}, verbose=True)
+
+    captured = capsys.readouterr()
+    assert "[ERROR] Error writing to file" in captured.out
+    assert not (tmp_path / "nested").exists()
+
 # _prepare_data_cdf_ppf
 def test_prepare_data_cdf_ppf_file_not_found(tmp_path, capsys):
     missing = tmp_path / "no.json"
