@@ -25,7 +25,7 @@ def make_valid_config(base_dir):
         "web_crawl": {
             "base_url": "https://example.com",
             "total_pages": 3,
-            "delay_between_requests": 1
+            "delay_between_requests": 1.0
         },
         "train_val_split": {
             "train_size": 0.8,
@@ -180,7 +180,7 @@ def valid_web_crawl() -> Dict[str, Any]:
     return {
         "total_pages": 10,
         "base_url": "https://example.com",
-        "delay_between_requests": 2,
+        "delay_between_requests": 2.0,
     }
 
 @pytest.fixture
@@ -253,7 +253,7 @@ def test_web_crawl_valid(valid_web_crawl):
 @pytest.mark.parametrize("key,wrong,err", [
     ("total_pages", 0.0, "web_crawl.total_pages should be an integer"),
     ("base_url", 123,      "web_crawl.base_url should be a string"),
-    ("delay_between_requests", "1", "web_crawl.delay_between_requests should be an integer"),
+    ("delay_between_requests", "1", "web_crawl.delay_between_requests should be a float"),
 ])
 def test_web_crawl_wrong_type(valid_web_crawl, key, wrong, err):
     d = valid_web_crawl.copy()

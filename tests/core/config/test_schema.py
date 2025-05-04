@@ -1,7 +1,7 @@
 import dataclasses
 from typing import List
 
-from dataset_builder.core.config.schema import (
+from dataset_builder.core.config.schema import (  # type: ignore
     GlobalConfig,
     PathsConfig,
     WebCrawlConfig,
@@ -70,7 +70,7 @@ def test_web_crawl_config_schema():
     ann = WebCrawlConfig.__annotations__
     assert ann["total_pages"] is int
     assert ann["base_url"] is str
-    assert ann["delay_between_requests"] is int
+    assert ann["delay_between_requests"] is float
 
     # instantiation
     wc = WebCrawlConfig(1000, "https://test.com", 1)
