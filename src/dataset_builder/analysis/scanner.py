@@ -8,8 +8,14 @@ from dataset_builder.core.utility import (
     SpeciesDict,
 )
 
+IMAGE_EXTENSION = '.jpg'
 
-def _scan_species_list(
+
+def _is_valid_class_dir(path: str, name: str) -> bool:
+    return os.path.isdir(path) and name not in IGNORE_DIRS
+
+
+def scan_species_list(
     data_path: str, target_classes: Optional[List[str]] = None
 ) -> Tuple[SpeciesDict, int]:
     """
@@ -26,7 +32,7 @@ def _scan_species_list(
             continue
 
         class_path = os.path.join(data_path, class_name)
-        if not os.path.isdir(class_path) or class_name in IGNORE_DIRS:
+        if not _is_valid_class_dir(data_path, class_name):
             continue
 
         species_dict[class_name] = [
@@ -39,8 +45,8 @@ def _scan_species_list(
     return species_dict, species_counter
 
 
-def _scan_image_counts(
-    data_path: str, target_classes: Optional[List[str]] = None, verbose: bool = True
+def scan_image_counts(
+    data_path: str, target_classes: Optional[List[str]] = None
 ) -> Dict[str, Dict[str, int]]:
     """
     Counts number of images per species under each class.
@@ -56,20 +62,20 @@ def _scan_image_counts(
             continue
 
         class_path = os.path.join(data_path, class_name)
-        if not os.path.isdir(class_path) or class_name in IGNORE_DIRS:
+        if not _is_valid_class_dir(data_path, class_name):
             continue
 
         for species in os.listdir(class_path):
             species_path = os.path.join(class_path, species)
             if os.path.isdir(species_path):
                 count = sum(
-                    1 for f in os.listdir(species_path) if f.lower().endswith(".jpg")
+                    1 for f in os.listdir(species_path) if f.lower().endswith(IMAGE_EXTENSION)
                 )
                 dataset_props[class_name][species] = count
     return dataset_props
 
 
-def _filter_species_from_json(
+def filter_species_from_json(
     json_file_path: str, target_classes: List[str], verbose: bool = False
 ) -> SpeciesDict:
     """
@@ -103,12 +109,13 @@ def _filter_species_from_json(
     if not filtered_data:
         raise ValueError(
             f"No matching classes found in {json_file_path}: {target_classes}"
+            f"Available classes: {list(data.keys())}"
         )
 
     total_species = sum(len(species) for species in filtered_data.values())
 
     log(f"Extracting data from {json_file_path}", verbose)
-    log(f"Extracted from {len(filtered_data.keys())}: ", verbose)
+    log(f"Extracted {total_species} species from {len(filtered_data.keys())} classes: ", verbose)
 
     for species_class, species in filtered_data.items():
         log(f"Extracted {len(species)} species from {species_class}", verbose=verbose)

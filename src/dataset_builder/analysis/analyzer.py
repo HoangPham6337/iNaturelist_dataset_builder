@@ -2,9 +2,9 @@ import os
 from typing import List
 
 from dataset_builder.analysis.scanner import (
-    _filter_species_from_json,
-    _scan_image_counts,
-    _scan_species_list,
+    filter_species_from_json,
+    scan_image_counts,
+    scan_species_list,
 )
 from dataset_builder.core.utility import SpeciesDict, _is_json_file, write_data_to_json
 
@@ -64,17 +64,16 @@ def run_analyze_dataset(
         print(f"{species_output_path} already exists, skipping analyzing dataset.")
         return
 
-    species_name, species_count = "Species list", "Properties"
     counts_path = os.path.join(output_dir, f"{prefix}_composition.json")
 
-    if data_path.lower().endswith(".json"):
-        species_dict = _filter_species_from_json(data_path, target_classes, verbose)
+    if _is_json_file(data_path):
+        species_dict = filter_species_from_json(data_path, target_classes, verbose)
         _summarize_species_data(species_dict, data_path, verbose)
-        write_data_to_json(species_output_path, species_name, species_dict)
+        write_data_to_json(species_output_path, "Species list", species_dict)
     else:
-        species_dict, total_species = _scan_species_list(data_path)
+        species_dict, total_species = scan_species_list(data_path, target_classes)
         print(f"Total extracted species: {total_species}")
-        image_counts = _scan_image_counts(data_path)
+        image_counts = scan_image_counts(data_path, target_classes)
 
-        write_data_to_json(species_output_path, species_name, species_dict)
-        write_data_to_json(counts_path, species_count, image_counts)
+        write_data_to_json(species_output_path, "Species list", species_dict)
+        write_data_to_json(counts_path, "Image composition", image_counts)

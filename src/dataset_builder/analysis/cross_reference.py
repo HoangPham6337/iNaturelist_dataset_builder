@@ -1,5 +1,5 @@
 import os
-from typing import List
+from typing import List, Tuple
 
 from dataset_builder.analysis.matching import (
     cross_reference_set,
@@ -10,7 +10,12 @@ from dataset_builder.core.utility import (
     _is_json_file,
     read_species_from_json,
     write_data_to_json,
+    SpeciesDict
 )
+
+
+def _check_json_files_exist(*paths: str) -> bool:
+    return all(_is_json_file(p) for p in paths)
 
 
 def run_cross_reference(
@@ -22,7 +27,7 @@ def run_cross_reference(
     target_classes: List[str],
     verbose: bool = False,
     overwrite: bool = False,
-):
+) -> Tuple[SpeciesDict, int]:
     """
     Performs a cross-reference between two species datasets to identify 
     matching species based on the provided target classes and outputs the 
@@ -42,7 +47,8 @@ def run_cross_reference(
         FailedOperation: If one or both datasets are empty or if any dataset is not a valid JSON file.
 
     Returns:
-        None: This function does not return any value but writes the cross-referenced species data to the specified output file.
+        Tuple(SpeciesDict, int): A dictionary containing species class as keys and their species
+        as values and the total number of matches.
 
     Prints:
         - A message if the output file already exists and `overwrite` is False.
@@ -51,11 +57,13 @@ def run_cross_reference(
     display_name = f"Matched species between {data_1_name} and {data_2_name}"
 
     if os.path.isfile(output_file_path) and not overwrite:
-        print(f"{output_file_path} already exists, skipping web crawl.")
-        return
+        print(f"{output_file_path} already exists, skipping cross reference.")
+        data = read_species_from_json(output_file_path)
+        total = sum(len(species_list) for species_list in data.values())
+        return data, total
 
-    if not _is_json_file(json_1_path) or not _is_json_file(json_2_path):
-        raise FailedOperation("JSON file not found.")
+    if not _check_json_files_exist(json_1_path, json_2_path):
+        raise FailedOperation(f"Invalid JSON input: {json_1_path}, {json_2_path}")
 
     dataset_1 = read_species_from_json(json_1_path)
     dataset_2 = read_species_from_json(json_2_path)
@@ -65,10 +73,11 @@ def run_cross_reference(
             "One or both species dataset are empty. Cross-reference aborted."
         )
 
-    match_species, total_matches = cross_reference_set(
+    match_species, total_matches, _ = cross_reference_set(
         dataset_1, dataset_2, target_classes
     )
 
     log(f"Total matches: {total_matches}", verbose)
 
     write_data_to_json(output_file_path, display_name, match_species)
+    return match_species, total_matches

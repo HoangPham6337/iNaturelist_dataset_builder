@@ -1,9 +1,9 @@
-from typing import List, Set, Tuple
+from typing import List, Set, Tuple, Optional, Dict
 
 from dataset_builder.core.utility import SpeciesDict
 
 
-def _aggregate_all_species(species_data: SpeciesDict, target_classes: List[str] = []) -> Set[str]:
+def _aggregate_all_species(species_data: SpeciesDict, target_classes: Optional[List[str]] = None) -> Set[str]:
     """
     Aggregates all species from the provided species data into a set of unique species names.
 
@@ -14,6 +14,8 @@ def _aggregate_all_species(species_data: SpeciesDict, target_classes: List[str] 
     Returns:
         Set[str]: A set containing all unique species names from the input species data.
     """
+    if target_classes is None:
+        target_classes = list(species_data.keys())
     species_set = set()
     for species_class, species_list in species_data.items():
         if species_class not in target_classes:
@@ -22,7 +24,7 @@ def _aggregate_all_species(species_data: SpeciesDict, target_classes: List[str] 
     return species_set
 
 
-def _find_set_matches_differences(
+def _match_and_diff_sets(
     set_1: Set[str], set_2: Set[str]
 ) -> Tuple[Set[str], Set[str]]:
     """
@@ -46,7 +48,7 @@ def cross_reference_set(
     species_dict_1: SpeciesDict,
     species_dict_2: SpeciesDict,
     target_classes: List[str],
-) -> Tuple[SpeciesDict, int]:
+) -> Tuple[SpeciesDict, int, Dict]:
     """
     Cross-reference two species dataset, identifying matched and unmatched species, and exports
     the results to a JSON file.
@@ -54,19 +56,16 @@ def cross_reference_set(
     Args:
         species_dict_1: SpeciesDict
         species_dict_2: SpeciesDict
-        species_set_1 (Set[str]): Aggregated set of all species from dataset 1
-        species_set_2 (Set[str]): Aggregated set of all species from dataset 2
-        output_path (str): Path to save the output JSON file
 
     Returns:
         Tuple[SpeciesDict, int]: A dictionary containing species class as keys and their species
         as values and the total number of matches.
     """
 
-    species_set_1 = _aggregate_all_species(species_dict_1, target_classes)
-    species_set_2 = _aggregate_all_species(species_dict_2, target_classes)
-    matches, unmatched = _find_set_matches_differences(
-        species_set_1, species_set_2)
+    all_species_set_1 = _aggregate_all_species(species_dict_1, target_classes)
+    all_species_set_2 = _aggregate_all_species(species_dict_2, target_classes)
+    matches, unmatched = _match_and_diff_sets(
+        all_species_set_1, all_species_set_2)
     # Union class to cover all unique classes from both dicts
     all_classes = set(species_dict_1) | set(species_dict_2)
     matched_dict: SpeciesDict = {}
@@ -79,10 +78,10 @@ def cross_reference_set(
     for class_name in all_classes:
         if class_name not in target_classes:
             continue
-        species_set_1 = set(species_dict_1.get(class_name, []))
-        species_set_2 = set(species_dict_2.get(class_name, []))
-        matched_species = species_set_1 & species_set_2
-        not_matched_species = (species_set_1 | species_set_2) - matched_species
+        class_species_set_1 = set(species_dict_1.get(class_name, []))
+        class_species_set_2 = set(species_dict_2.get(class_name, []))
+        matched_species = class_species_set_1 & class_species_set_2
+        not_matched_species = (class_species_set_1 | class_species_set_2) - matched_species
 
         matched_dict[class_name] = list(matched_species)
 
@@ -91,4 +90,4 @@ def cross_reference_set(
             "unmatched": sorted(not_matched_species),
         }
 
-    return matched_dict, len(matches)
+    return matched_dict, len(matches), report
