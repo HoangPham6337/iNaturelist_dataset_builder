@@ -13,6 +13,7 @@ from dataset_builder.analysis.matching import (  # type: ignore
 def dummy_species_dict() -> Dict[str, List[str]]:
     return {"class_a": ["sp1", "sp2"], "class_b": ["sp3"]}
 
+
 def test_aggregate_all_species(dummy_species_dict):
     species = _aggregate_all_species(dummy_species_dict, ["class_a", "class_b"])
     assert species == {"sp1", "sp2", "sp3"}
@@ -57,10 +58,10 @@ def test_cross_reference_set_partial_match():
     assert total == 1
 
 
-def test_cross_reference_set_unknown_class():
+def test_cross_reference_set_not_all_target_classes():
     d1 = {"class_a": ["sp1", "sp2"], "class_b": ["sp3"]}
     d2 = {"class_a": ["sp2"], "class_b": ["spX"]}
     # Just simply skip over them
-    matched, total, _ = cross_reference_set(d1, d2, ["class_a", "class_b", "class_c"])
-    assert matched == {"class_a": ["sp2"], "class_b": []}
+    matched, total, _ = cross_reference_set(d1, d2, ["class_a"])
+    assert matched == {"class_a": ["sp2"]}
     assert total == 1
