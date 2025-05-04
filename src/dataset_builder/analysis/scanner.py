@@ -97,7 +97,13 @@ def filter_species_from_json(
 
     data = read_species_from_json(json_file_path)
 
-    if not isinstance(data, dict):
+    if not (
+        isinstance(data, dict) 
+        and all(
+            isinstance(k, str) and isinstance(v, list) and all(isinstance(s, str) for s in v)
+            for k, v in data.items()
+        )
+    ):
         raise ValueError(f"Invalid JSON structure in {json_file_path}. It should be Dict[str, List[str]]")
 
     filtered_data: SpeciesDict = {
