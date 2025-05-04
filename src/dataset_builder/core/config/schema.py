@@ -24,7 +24,7 @@ class WebCrawlConfig:
     """Parameters controlling the web crawl (URL, pages, delay)."""
     total_pages: int
     base_url: str
-    delay_between_requests: int
+    delay_between_requests: float
 
 
 @dataclass
