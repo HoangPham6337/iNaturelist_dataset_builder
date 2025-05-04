@@ -132,7 +132,7 @@ def test_invalid_url_format(tmp_path):
     ("total_pages", -3),
     ("total_pages", 3.0),
     ("delay_between_requests", 0),
-    ("delay_between_requests", -1),
+    ("delay_between_requests", -1.2),
     ("delay_between_requests", "9"),
 ])
 def test_web_crawl_invalid_values(field, value, tmp_path):
