@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import List
 
-from tqdm import tqdm
+from tqdm import tqdm  # type: ignore
 
 from dataset_builder.builder.copier import copy_all_species
 from dataset_builder.builder.io import load_matched_species
@@ -28,7 +28,8 @@ def run_copy_matched_species(
 
     print(f"Copying data to {dst_dataset}")
     tasks_with_progress = tqdm(tasks, total=total_tasks, desc="Species", unit="species")
-    copied, total = copy_all_species(tasks_with_progress, verbose)
-
-    if not overwrite and copied != total:
-        raise FailedOperation(f"Failed to copy all matched species: {copied}/{total} copied")
+    copied, skipped, missing = copy_all_species(tasks_with_progress, verbose)
+    if missing > 0 and not overwrite:
+        raise FailedOperation(f"Missing images in {missing} of {total_tasks} species")
+    elif copied == 0 and skipped > 0:
+        print(f"All {skipped} species already up-to-date; nothing to do")

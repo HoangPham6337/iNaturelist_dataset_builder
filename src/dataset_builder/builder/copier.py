@@ -1,10 +1,17 @@
 import shutil
 from typing import Tuple, Iterator
+from enum import Enum
 from dataset_builder.builder.walker import CopyTask
 from dataset_builder.core.utility import log
 
 
-def copy_one_species_data(task: CopyTask, verbose: bool = False) -> bool:
+class CopyStatus(Enum):
+    COPIED = 1
+    SKIPPED = 2
+    MISSING = 3
+
+
+def copy_one_species_data(task: CopyTask, verbose: bool = False) -> CopyStatus:
     """
     Copy all files under `src_dir` to `dst_dir` for one species.
     Returns `True` if `src_dir` existed and copied at least one file,
@@ -13,10 +20,10 @@ def copy_one_species_data(task: CopyTask, verbose: bool = False) -> bool:
     species_class, species, src_dir, dst_dir = task
     if not src_dir.exists():
         log(f"Missing source directory: {src_dir}", True, "ERROR")
-        return False
+        return CopyStatus.MISSING
     
     dst_dir.mkdir(parents=True, exist_ok=True)
-    copied_any = False
+    did_copied = False
 
     for image_file in src_dir.iterdir():
         if image_file.is_file():
@@ -24,23 +31,28 @@ def copy_one_species_data(task: CopyTask, verbose: bool = False) -> bool:
             if not target.exists():
                 shutil.copy2(image_file, target)
                 log(f"Copied {species_class}/{species}/{image_file.name}", verbose)
-                copied_any = True
+                did_copied = True
             else:
                 log(f"Skipping existing {species_class}/{species}/{image_file.name}", verbose)
-    return copied_any
+    return CopyStatus.COPIED if did_copied else CopyStatus.SKIPPED
 
 
 def copy_all_species(
     tasks: Iterator[CopyTask],
     verbose: bool = False
-) -> Tuple[int, int]:
+) -> Tuple[int, int, int]:
     """
     Runs `copy_one` over all tasks, returns `copied_count`, `total_tasks`.
     """
-    total = 0
     copied = 0
+    skipped = 0
+    missing = 0
     for task in tasks:
-        total += 1
-        if copy_one_species_data(task, verbose):
+        status = copy_one_species_data(task, verbose)
+        if status is CopyStatus.COPIED:
             copied += 1
-    return copied, total
+        elif status is CopyStatus.SKIPPED:
+            skipped += 1
+        else:
+            missing += 1
+    return copied, skipped, missing
