@@ -90,7 +90,7 @@ def test_partial_copy_raises_and_logs_missing(tmp_path: Path, capsys):
     mj = make_matched_json(tmp_path, {"Aves": ["sparrow", "hawk"]})
 
     # expect failure because 1/2 copied
-    with pytest.raises(FailedOperation, match="Failed to copy all matched species: 1/2 copied"):
+    with pytest.raises(FailedOperation, match="Missing images in 1 of 2 species"):
         run_copy_matched_species(str(src), str(dst), str(mj), ["Aves"], verbose=False)
 
     # it should have logged a missing‐directory error for hawk
@@ -123,11 +123,11 @@ def test_overwrite_existing_files(tmp_path: Path, capsys):
 
     mj = make_matched_json(tmp_path, {"Aves": ["sparrow"]})
 
-    with pytest.raises(FailedOperation, match="Failed to copy all matched species"):
-        run_copy_matched_species(str(src), str(tmp_path/"dst"), str(mj), ["Aves"], verbose=True)
+    run_copy_matched_species(str(src), str(tmp_path/"dst"), str(mj), ["Aves"], verbose=True)
     out = capsys.readouterr().out
     # it should have logged a skip notice (File exists - skipping)
     assert "Skipping existing" in out
+    assert "All 1 species already up-to-date; nothing to do" in out
 
     # original file should remain unchanged
     assert existing.read_text() == "old"
