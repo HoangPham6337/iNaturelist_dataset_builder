@@ -39,3 +39,18 @@ def test_run_analyze_dataset_with_dir(populated_dir, tmp_path):
     composition = read_species_from_json(out_dir / "test_composition.json")
     assert "class_a" in species_out
     assert "class_a" in composition
+
+
+def test_run_analyze_dataset_verbose(dummy_json_file, tmp_path, capsys):
+    out_dir = tmp_path / "output"
+    run_analyze_dataset(dummy_json_file, str(out_dir), "test", ["class_a"], verbose=True)
+    output = capsys.readouterr().out
+    assert "class_a: 3 species" in output
+
+
+def test_run_analyze_all_ready_exist(dummy_json_file, tmp_path, capsys):
+    out_dir = tmp_path / "output"
+    run_analyze_dataset(dummy_json_file, str(out_dir), "test", ["class_a"], verbose=False)
+    run_analyze_dataset(dummy_json_file, str(out_dir), "test", ["class_a"], verbose=False)
+    output = capsys.readouterr().out
+    assert "already exists, skipping analyzing dataset." in output
