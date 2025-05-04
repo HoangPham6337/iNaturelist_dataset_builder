@@ -83,7 +83,7 @@ def cross_reference_set(
         matched_species = class_species_set_1 & class_species_set_2
         not_matched_species = (class_species_set_1 | class_species_set_2) - matched_species
 
-        matched_dict[class_name] = list(matched_species)
+        matched_dict[class_name] = sorted(list(matched_species))
 
         report["class_comparison"][class_name] = {  # type: ignore
             "matched": sorted(matched_species),
