@@ -5,13 +5,10 @@
 <h3 align="center">A modular dataset preparation toolkit for species-based classification pipelines.</h3>
 <p align="center">
 A flexible and fast dataset builder for iNaturalist-style species classification.
-
-
-  
-
-
 </p>
 </div>
+
+[![Coverage Status](https://coveralls.io/repos/github/HoangPham6337/iNaturelist_dataset_builder/badge.svg?branch=main)](https://coveralls.io/github/HoangPham6337/iNaturelist_dataset_builder?branch=main)
 
 ## About The Project
 ![Example Output](images/example.png)
