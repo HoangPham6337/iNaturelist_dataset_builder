@@ -37,6 +37,29 @@ def test_venn_diagram_generation():
         assert os.path.exists(out)
 
 
+def test_venn_diagram_generation_already_exist(capsys):
+    with tempfile.TemporaryDirectory() as tmp:
+        d1 = {
+            "class_a": {"sp1": 10, "sp2": 5},
+            "class_b": {"sp3": 3}
+        }
+        d2 = {
+            "class_a": {"sp2": 6, "sp3": 2},
+            "class_b": {"sp4": 1}
+        }
+
+        path1 = os.path.join(tmp, "src.json")
+        path2 = os.path.join(tmp, "dst.json")
+        out = os.path.join(tmp, "venn.png")
+        with open(out, "w") as tmp_file:
+            tmp_file.write("tada")
+        create_dummy_species_file(path1, d1)
+        create_dummy_species_file(path2, d2)
+
+        venn_diagram(path1, path2, "src", "dst", "test", target_classes=["class_a"], save_path=out)
+        assert "already exists, skipping creating" in  capsys.readouterr().out
+
+
 def test_class_composition_bar_chart():
     with tempfile.TemporaryDirectory() as tmp:
         d = {
@@ -95,7 +118,81 @@ def test_class_composition_bar_chart():
         assert os.path.exists(out)
 
 
-def test_visualizing_ppf():
+def test_class_composition_bar_chart_no_species(capsys):
+    with tempfile.TemporaryDirectory() as tmp:
+        d = {
+            "Aves": {
+                "Corvus corax": 882,
+                "Coccothraustes coccothraustes": 52,
+                "Somateria mollissima": 145,
+                "Myioborus miniatus": 49,
+                "Crax rubra": 46,
+                "Anas crecca": 456,
+                "Thryothorus ludovicianus": 574,
+                "Coragyps atratus": 831,
+                "Turdus philomelos": 144,
+                "Columbina inca": 560,
+                "Chroicocephalus ridibundus": 295,
+                "Scopus umbretta": 30,
+                "Ocyphaps lophotes": 41,
+                "Spizella atrogularis": 37,
+                "Pheucticus melanocephalus": 370,
+                "Phalacrocorax auritus": 1726,
+                "Rallus crepitans": 43,
+                "Euphonia elegantissima": 41,
+                "Tyrannus dominicensis": 52,
+                "Sitta canadensis": 325,
+                "Chen rossii": 130,
+            },
+        }
+        path = os.path.join(tmp, "properties.json")
+        out = os.path.join(tmp, "bar.png")
+        create_dummy_species_file(path, d)
+
+        _class_composition_bar_chart(path, "Insecta", save_path=out)
+        assert "Class 'Insecta' not found" in capsys.readouterr().out
+
+
+def test_class_composition_bar_chart_already_exists(capsys):
+    with tempfile.TemporaryDirectory() as tmp:
+        d = {
+            "Aves": {
+                "Corvus corax": 882,
+                "Coccothraustes coccothraustes": 52,
+                "Somateria mollissima": 145,
+                "Myioborus miniatus": 49,
+                "Crax rubra": 46,
+                "Anas crecca": 456,
+                "Thryothorus ludovicianus": 574,
+                "Coragyps atratus": 831,
+                "Turdus philomelos": 144,
+                "Columbina inca": 560,
+                "Chroicocephalus ridibundus": 295,
+                "Scopus umbretta": 30,
+                "Ocyphaps lophotes": 41,
+                "Spizella atrogularis": 37,
+                "Pheucticus melanocephalus": 370,
+                "Phalacrocorax auritus": 1726,
+                "Rallus crepitans": 43,
+                "Euphonia elegantissima": 41,
+                "Tyrannus dominicensis": 52,
+                "Sitta canadensis": 325,
+                "Chen rossii": 130,
+            },
+        }
+        path = os.path.join(tmp, "properties.json")
+        out = os.path.join(tmp, "bar.png")
+        create_dummy_species_file(path, d)
+        out = os.path.join(tmp, "venn.png")
+        with open(out, "w") as tmp_file:
+            tmp_file.write("tada")
+
+        _class_composition_bar_chart(path, "Aves", save_path=out, verbose=True)
+        assert "already exists, skipping" in capsys.readouterr().out
+
+
+
+def test_visualizing_ppf(capsys):
     with tempfile.TemporaryDirectory() as tmp:
         d = {
             "Mammalia": {
@@ -108,5 +205,5 @@ def test_visualizing_ppf():
         out = os.path.join(tmp, "ppf.png")
         create_dummy_species_file(path, d)
 
-        _visualizing_ppf(path, "Mammalia", save_path=out)
+        _visualizing_ppf(path, "Mammalia", save_path=out, verbose=True)
         assert os.path.exists(out)
