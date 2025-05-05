@@ -192,7 +192,7 @@ def test_class_composition_bar_chart_already_exists(capsys):
 
 
 
-def test_visualizing_ppf(capsys):
+def test_visualizing_ppf():
     with tempfile.TemporaryDirectory() as tmp:
         d = {
             "Mammalia": {
@@ -207,3 +207,26 @@ def test_visualizing_ppf(capsys):
 
         _visualizing_ppf(path, "Mammalia", save_path=out, verbose=True)
         assert os.path.exists(out)
+
+def test_visualizing_ppf_already_exists(capsys):
+    with tempfile.TemporaryDirectory() as tmp:
+        d = {}
+        path = os.path.join(tmp, "properties.json")
+        out = os.path.join(tmp, "ppf.png")
+        with open(out, "w") as tmp_file:
+            tmp_file.write("tada")
+        create_dummy_species_file(path, d)
+
+        _visualizing_ppf(path, "Mammalia", save_path=out, verbose=True)
+        assert "already exists, skipping" in capsys.readouterr().out
+
+
+def test_visualizing_ppf_no_data(capsys):
+    with tempfile.TemporaryDirectory() as tmp:
+        d = {}
+        path = os.path.join(tmp, "properties.json")
+        out = os.path.join(tmp, "ppf.png")
+        create_dummy_species_file(path, d)
+
+        _visualizing_ppf(path, "Mammalia", save_path=out, verbose=True)
+        assert "No data found for" in capsys.readouterr().out
