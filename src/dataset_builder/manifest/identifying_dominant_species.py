@@ -3,10 +3,60 @@ from typing import Dict, List, Optional
 
 import numpy as np
 
-from dataset_builder.core.utility import _prepare_data_cdf_ppf
+from dataset_builder.core.utility import _prepare_data_cdf_ppf, SpeciesDict
+from dataset_builder.core.log import log
+from dataset_builder.core.exceptions import PipelineError
 
 
-def _identifying_dominant_species(properties_json_path: str, threshold: float, classes_to_analyze: List[str]) -> Optional[Dict[str, List[str]]]:
+def _validate_dominant_species_rules(threshold: float):
+    if threshold < 0 or threshold > 1:
+        raise PipelineError("Threshold must be between 0 and 1")
+
+
+def analyze_single_class(
+    properties_json_path: str,
+    species_class: str,
+    threshold: float,
+) -> List[str]:
+    """
+    Process one species class and return dominant species.
+    """
+    result = _prepare_data_cdf_ppf(properties_json_path, species_class)
+    if result is None:
+        raise PipelineError(f"ERROR: Data preparation failed for {species_class}")
+
+    species_names, sorted_image_counts = result
+
+    if not species_names or not sorted_image_counts:
+        log(f"No data available for {species_class}", True, "WARNING")
+        return []
+
+    total_images = sum(sorted_image_counts)
+    if total_images == 0:
+        log(f"No data available for {species_class}", True, "WARNING")
+        return []
+
+    cumulative_images = np.cumsum(sorted_image_counts)
+    cdf_values = cumulative_images / total_images
+    sorted_images = np.array(sorted_image_counts)
+
+    filtered_index = np.argmax(cdf_values >= threshold)
+    thresholded_image_count = sorted_images[filtered_index]
+
+    if filtered_index == 0 and cdf_values[0] > threshold:
+        raise PipelineError(
+            f"Threshold {threshold:.2f} is too low to select any meaningful dominant species in class '{species_class}\nMinimum: {cdf_values[0]}'"
+        )
+
+    dominant_species = [
+        species
+        for species, count in zip(species_names, sorted_image_counts)
+        if count >= thresholded_image_count
+    ]
+    return dominant_species
+
+
+def identifying_dominant_species(properties_json_path: str, threshold: float, classes_to_analyze: List[str]) -> Optional[Dict[str, List[str]]]:
     """
     Identifies dominant species in the given classes based on a specified image count threshold.
 
@@ -19,23 +69,13 @@ def _identifying_dominant_species(properties_json_path: str, threshold: float, c
         classes_to_analyze: List of species classes to analyze.
 
     Returns:
-        Dict(str, List[str]): A dictionary where keys are species class names, and values are lists of dominant species names.
+        SpeciesDict: A dictionary where keys are species class names, and values are lists of dominant species names.
         Returns None if the data preparation fails for any class.
     """
-    species_data: Dict[str, list[str]] = defaultdict(list)
-    for species_class in classes_to_analyze:
-        result = _prepare_data_cdf_ppf(properties_json_path, species_class)
-        if result is None:
-            print(f"ERROR: Data preparation failed for {species_class}")
-            return None
-        species_names, sorted_image_counts = result
-        total_images = sum(sorted_image_counts)
-        cumulative_images = np.cumsum(sorted_image_counts) 
-        cdf_values = cumulative_images / total_images
-        sorted_images = np.array(sorted_image_counts)
-        filtered_index = np.argmax(cdf_values >= threshold)
-        thresholded_image_count = sorted_images[filtered_index]
+    _validate_dominant_species_rules(threshold)
 
-        dominant_species = [species for species, count in zip(species_names, sorted_image_counts) if count >= thresholded_image_count]
+    species_data: SpeciesDict = defaultdict(list)
+    for species_class in classes_to_analyze:
+        dominant_species = analyze_single_class(properties_json_path, species_class, threshold)
         species_data[species_class] = dominant_species
     return species_data
