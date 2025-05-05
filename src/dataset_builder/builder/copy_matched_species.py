@@ -17,6 +17,28 @@ def run_copy_matched_species(
     overwrite: bool = False,
     verbose: bool = False
 ) -> None:
+    """
+    Copies matched species data from the source dataset to the destination directory.
+
+    This function loads a JSON file containing matched species grouped by class,
+    filters the species by the specified target classes, and copies their data
+    (images) from `src_dataset` to `dst_dataset`.
+
+    For each species, it uses a `CopyTask` and tracks the number of species successfully
+    copied, skipped (already exist), or missing (source directory does not exist).
+    If any species are missing and `overwrite` is False, the function raises a `FailedOperation`.
+
+    Args:
+        src_dataset (str): Path to the source dataset directory.
+        dst_dataset (str): Path to the destination dataset directory.
+        matched_species_json (str): Path to a JSON file containing matched species information.
+        target_classes (List[str]): List of species classes to filter and copy.
+        overwrite (bool, optional): Whether to ignore missing species and proceed anyway. Defaults to False.
+        verbose (bool, optional): Whether to print detailed logs during copy. Defaults to False.
+
+    Raises:
+        FailedOperation: If some species are missing in the source dataset and `overwrite` is False.
+    """
     matched_species = load_matched_species(matched_species_json)
 
     total_tasks = sum(

@@ -55,6 +55,25 @@ def export_dataset_files(
     species_composition: Dict[str, int],
     per_species_list: bool = False,
 ):
+    """
+    Exports dataset manifests, composition, and optional per-species image lists to the specified output directory.
+
+    Saves:
+        - Full dataset manifest (`dataset_manifest.parquet`)
+        - Train/validation splits (`train.parquet`, `val.parquet`)
+        - Species label mapping (`dataset_species_labels.json`)
+        - Species image count summary (`species_composition.json`)
+        - Optional: per-species image lists as JSON under `species_lists/` subfolder.
+
+    Args:
+        output_dir (str): Directory where output files will be saved.
+        image_list (List[Tuple[str, int]]): Complete list of image paths and label IDs.
+        train_data (List[Tuple[str, int]]): Training split of the image dataset.
+        val_data (List[Tuple[str, int]]): Validation split of the image dataset.
+        species_dict (Dict[int, str]): Mapping from label IDs to species names.
+        species_composition (Dict[str, int]): Mapping from species names to image counts.
+        per_species_list (bool): If True, also saves per-species image lists in a subdirectory.
+    """
     os.makedirs(output_dir, exist_ok=True)
     with open(os.path.join(output_dir, "dataset_species_labels.json"), "w", encoding="utf-8") as f:
         json.dump(species_dict, f, indent=4)

@@ -84,6 +84,7 @@ def filter_species_from_json(
     Args:
         json_file_path: Path to the JSON file containing species data.
         target_classes: List of class names to include (e.g.)
+        verbose: whether to print the progress to stdout
 
     Returns:
         SpeciesDict: A dictionary with filtered species data.

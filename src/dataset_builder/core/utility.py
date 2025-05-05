@@ -141,7 +141,8 @@ def read_species_from_json(file_input_path: str) -> SpeciesDict:
 def _prepare_data_cdf_ppf(
     properties_json_path: str, class_to_analyze: str
 ) -> Optional[Tuple[List[str], List[int]]]:
-    """Loads species image data from JSON dataset properties file, sorts by image count, and prepares data for CDF/PPF calculations.
+    """
+    Loads species image data from JSON dataset properties file, sorts by image count, and prepares data for CDF/PPF calculations.
 
     Args:
         properties_json_path: Path to the dataset properties JSON file.

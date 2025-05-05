@@ -19,7 +19,27 @@ def analyze_single_class(
     threshold: float,
 ) -> List[str]:
     """
-    Process one species class and return dominant species.
+    Analyzes a single species class to identify dominant species based on cumulative image distribution.
+
+    The function reads image count data from a precomputed properties file, computes the cumulative
+    distribution function (CDF) of image counts, and selects the minimal set of species that collectively
+    reach or exceed the specified threshold of total images.
+
+    Args:
+        properties_json_path (str): Path to the JSON file containing image statistics per species per class.
+        species_class (str): The name of the class to analyze (e.g., "Aves").
+        threshold (float): The cumulative percentage threshold (e.g., 0.8 for 80%).
+
+    Returns:
+        List[str]: A list of dominant species names that contribute to the threshold image coverage.
+
+    Raises:
+        PipelineError: If data preparation fails, total images is zero, or threshold is too low
+                       to include any species.
+
+    Notes:
+        - If no species meet the criteria or data is missing, an empty list is returned.
+        - If the threshold is below the first species's cdf, a PipelineError is raised.
     """
     result = _prepare_data_cdf_ppf(properties_json_path, species_class)
     if result is None:

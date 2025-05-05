@@ -97,6 +97,25 @@ def collect_images(
     data_dir: str,
     dominant_species: Optional[SpeciesDict]
 ) -> Tuple[List[Tuple[str, int]], Dict[int, str], Dict[str, int]]:
+    """
+    Collects all image paths and assigns labels to species in a dataset directory.
+
+    Iterates through species class subfolders in `data_dir`, optionally using a 
+    dominant species list to determine whether to include all species or map 
+    non-dominant ones to a shared "Other" class.
+
+    Args:
+        data_dir (str): Root directory containing class folders with species subdirectories.
+        dominant_species (Optional[SpeciesDict]): Mapping from class names to lists of dominant species.
+            If None, all species are considered. If provided, only dominant species are individually labeled;
+            others are grouped under an "Other" label.
+
+    Returns:
+        Tuple containing:
+            - image_list (List[Tuple[str, int]]): List of (image_path, species_label) pairs.
+            - species_dict (Dict[int, str]): Mapping from label ID to species name.
+            - species_to_id (Dict[str, int]): Mapping from species name to label ID.
+    """
     species_to_id: Dict[str, int] = {}
     species_dict: Dict[int, str] = {}
     image_list: List[Tuple[str, int]] = []
