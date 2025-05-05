@@ -2,7 +2,7 @@ import shutil
 from typing import Tuple, Iterator
 from enum import Enum
 from dataset_builder.builder.walker import CopyTask
-from dataset_builder.core.utility import log
+from dataset_builder.core.log import log
 
 
 class CopyStatus(Enum):
