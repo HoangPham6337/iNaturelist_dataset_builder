@@ -49,6 +49,7 @@ pip install dataset_builder_inat
 ```
 For more details, check out the wiki [here](https://github.com/HoangPham6337/iNaturelist_dataset_builder/wiki/Installation)
 
+
 ## Usage
 
 This package is designed to be used through its high-level Python APIs. The typical workflow is defined in a central Python script such as `main.py` (see below), which loads a config file and runs multiple dataset preparation stages.
