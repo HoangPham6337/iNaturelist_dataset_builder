@@ -47,7 +47,7 @@ Whether you are training a deep learning model or simply exploring biodiversity 
 ```python
 pip install dataset_builder_inat
 ```
-For more details, check out the wiki [here](https://github.com/HoangPham6337/iNaturelist_dataset_builder/wiki/Ihttps://github.com/HoangPham6337/iNaturelist_dataset_buildernstallation)
+For more details, check out the wiki [here](https://github.com/HoangPham6337/iNaturelist_dataset_builder/wiki/Installation)
 
 ## Usage
 
@@ -81,7 +81,7 @@ train_val_split:
 
 **Step 2: Create the `main.py` or use the `dataset_orchestration.py` provided in release**
 
-For more details, you can check out the wiki [here](https://github.com/HoangPham6337/iNaturelist_dataset_builder/wiki/Pipeline).
+For more details, you can check out the wiki [here](https://github.com/HoangPham6337/iNaturelist_dataset_builder/wiki/Pipeline)
 
 ## Roadmap
 
