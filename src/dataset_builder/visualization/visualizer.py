@@ -1,6 +1,7 @@
 import json
 import multiprocessing
 import os
+from collections import defaultdict
 from typing import Dict, List, Optional
 
 import matplotlib.pyplot as plt
@@ -14,6 +15,7 @@ from dataset_builder.core.utility import (
     log,
     read_species_from_json,
 )
+from dataset_builder.core.exceptions import PipelineError
 
 
 def _print_on_plot(species_needed: int, cdf_reached: int, species_num: int) -> None:
@@ -241,6 +243,94 @@ def _visualizing_ppf(
     plt.xlabel("Number of species (ranked by image count)", fontsize=20)
     plt.ylabel("Cumulative percentage of images", fontsize=20)
     plt.title(f"Cumulative Composition Curve for {class_to_analyze}")
+
+    _plot_axh_line(0.5, "50%")
+    _plot_axh_line(0.8, "80%")
+    _plot_axh_line(0.9, "90%")
+
+    if save_path:
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        plt.savefig(save_path, bbox_inches="tight")
+        log(f"PPF plot saved to {save_path}", verbose)
+        plt.close()
+    else:
+        plt.show()
+
+
+def visualize_ppf_multiple_species_class(
+    properties_json_path: str,
+    class_list_to_analyze: List[str],
+    save_path: Optional[str] = None,
+    verbose: bool = False,
+    overwrite: bool = False,
+) -> None:
+    """
+    Generates and visualizes a CDF/PPF curve for the species distribution within a given class.
+
+    The function reads species data, computes cumulative distribution function (CDF) values,
+    and plots a PPF (Percentage of Population Function) curve for the species class. It also
+    marks and annotates the number of species needed to reach specific cumulative percentages.
+
+    Args:
+        properties_json_path: Path to the JSON file containing species data.
+        class_to_analyze: The species class to analyze (e.g., "Aves").
+        save_path: Path to save the plot image. Defaults to None, which displays the plot.
+        verbose: Whether to log detailed information. Defaults to False.
+        overwrite: Whether to overwrite an existing file if the save path exists. Defaults to False.
+    """
+    if save_path and os.path.isfile(save_path) and not overwrite:
+        log(f"{os.path.basename(save_path)} already exists, skipping", True, "INFO")
+        return
+
+    total_species_count: Dict[str, int] = defaultdict(int)
+
+    for class_name in class_list_to_analyze:
+        result = _prepare_data_cdf_ppf(properties_json_path, class_name)
+        # Allow for failing
+        if result is None:
+            log(f"No data found for {class_list_to_analyze}", True, "WARNING")
+            continue
+
+        species_names, sorted_image_counts = result
+        for name, count in zip(species_names, sorted_image_counts):
+            total_species_count[name] += count
+
+    sorted_items = sorted(total_species_count.items(), key=lambda x: x[1], reverse=True)
+    if len(sorted_items) == 0:
+        raise PipelineError("There's no data to visualize.")
+    species_names, image_counts = zip(*sorted_items)
+
+    total_images = sum(image_counts)
+    cumulative_images = np.cumsum(image_counts)
+    cdf_values = cumulative_images / total_images
+
+    species_num = len(species_names)
+    species_indices = np.arange(1, species_num + 1)
+
+    thresholds = [0.5, 0.8, 0.9]
+    plt.figure(figsize=(30, 18))
+
+    for threshold in thresholds:
+        idx = np.argmax(cdf_values >= threshold)
+        species_needed = int(idx + 1)
+        cdf_reached = cdf_values[idx]
+
+        plt.plot(species_indices, cdf_values, marker=".", linestyle="-")
+
+        _print_on_plot(species_needed, cdf_reached, species_num)
+
+    plt.scatter(species_num, cdf_values[species_num - 1], color="black", zorder=5)
+    plt.text(
+        species_num + 1,
+        cdf_values[species_num - 1],
+        f"{species_num} species",
+        fontsize=20,
+        va="top",
+    )
+
+    plt.xlabel("Number of species (ranked by image count)", fontsize=20)
+    plt.ylabel("Cumulative percentage of images", fontsize=20)
+    plt.title(f"Cumulative Composition Curve for {class_list_to_analyze}")
 
     _plot_axh_line(0.5, "50%")
     _plot_axh_line(0.8, "80%")
