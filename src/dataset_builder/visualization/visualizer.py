@@ -298,7 +298,7 @@ def visualize_ppf_multiple_species_class(
     sorted_items = sorted(total_species_count.items(), key=lambda x: x[1], reverse=True)
     if len(sorted_items) == 0:
         raise PipelineError("There's no data to visualize.")
-    species_names, image_counts = zip(*sorted_items)
+    species_names, image_counts = zip(*sorted_items)  # type: ignore
 
     total_images = sum(image_counts)
     cumulative_images = np.cumsum(image_counts)
