@@ -24,6 +24,7 @@ def collect_images_by_dominance(
     species_dict: Dict[int, str],
     image_list: List[Tuple[str, int]],
     current_id: int,
+    just_other: bool = False
 ) -> int:
     """
     Collects image paths for dominant and non-dominant species from the dataset.
@@ -60,6 +61,21 @@ def collect_images_by_dominance(
             for img_file in os.listdir(species_path):
                 img_path = os.path.join(species_path, img_file)
                 image_list.append((img_path, label))
+    elif just_other and dominant_set:
+        print("Generating for just 'Other'")
+        for species in sorted(os.listdir(dataset_path)):
+            if species in dominant_set:
+                continue
+            species_path = os.path.join(dataset_path, species)
+            if not os.path.isdir(species_path):
+                continue
+            label = species_to_id.setdefault(species, current_id)
+            if label == current_id:
+                species_dict[current_id] = species
+                current_id += 1
+            for img_file in os.listdir(species_path):
+                img_path = os.path.join(species_path, img_file)
+                image_list.append((img_path, label))       
     else:
 
         # First pass: dominant species
@@ -95,7 +111,8 @@ def collect_images_by_dominance(
 
 def collect_images(
     data_dir: str,
-    dominant_species: Optional[SpeciesDict]
+    dominant_species: Optional[SpeciesDict],
+    just_other: bool = False
 ) -> Tuple[List[Tuple[str, int]], Dict[int, str], Dict[str, int]]:
     """
     Collects all image paths and assigns labels to species in a dataset directory.
@@ -131,7 +148,8 @@ def collect_images(
                 species_to_id,
                 species_dict,
                 image_list,
-                current_id
+                current_id,
+                just_other
             )
     species_dict = dict(sorted(species_dict.items()))
 

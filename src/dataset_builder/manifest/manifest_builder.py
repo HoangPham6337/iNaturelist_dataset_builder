@@ -14,6 +14,7 @@ def run_manifest_generator(
     threshold: float,
     per_species_list: bool = False,
     export: bool = True,
+    just_other: bool = False
 ) -> Tuple[List[Tuple[str, int]], List[Tuple[str, int]], List[Tuple[str, int]], Dict[int, str], Dict[str, int]]:
     """
     Builds a dataset manifest by collecting species images, identifying dominant species, 
@@ -53,7 +54,7 @@ def run_manifest_generator(
             - species_lists/ (optional per-species files)
     """
     dominant_species = get_dominant_species_if_needed(dataset_properties_path, threshold, target_classes)
-    image_list, species_dict, _ = collect_images(data_dir, dominant_species)
+    image_list, species_dict, _ = collect_images(data_dir, dominant_species, just_other)
     species_composition = generate_species_composition(image_list, species_dict)
     train_data, val_data = split_train_val(image_list, train_size, random_state)
 

@@ -23,10 +23,17 @@ def generate_species_composition(
         Dict[str, int]: A dictionary mapping species names to the number of images belonging to them.
     """
     species_composition: Dict[str, int] = {}
+    lowest = 99999999
+    highest = 0
     for species_label, species_name in species_dict.items():
         current_species = [1 for label in image_list if label[1] == species_label]
         total_species = sum(current_species)
+        if total_species < lowest:
+            lowest = total_species
+        if total_species > highest:
+            highest = total_species
         species_composition[species_name] = total_species
+    log(f"Highest vs lowest amount of representation: {highest} / {lowest}")
     return species_composition
 
 
