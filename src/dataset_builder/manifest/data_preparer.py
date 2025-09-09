@@ -1,15 +1,8 @@
 import os
-from typing import List, Optional, Dict, Set, Tuple, Iterator
+from typing import List, Optional, Dict, Set, Tuple
 from dataset_builder.core.utility import SpeciesDict
 from dataset_builder.core.log import log
 from dataset_builder.manifest.identifying_dominant_species import identifying_dominant_species
-from dataset_builder.core.exceptions import PipelineError
-from enum import IntEnum
-
-
-class BinarySpeciesType(IntEnum):
-    DOMINANT = 0
-    OTHER = 1
 
 
 def get_dominant_species_if_needed(
@@ -31,8 +24,7 @@ def collect_images_by_dominance(
     species_dict: Dict[int, str],
     image_list: List[Tuple[str, int]],
     current_id: int,
-    just_other: bool = False,
-    binary_classification: bool=False
+    just_other: bool = False
 ) -> int:
     """
     Collects image paths for dominant and non-dominant species from the dataset.
@@ -69,7 +61,7 @@ def collect_images_by_dominance(
             for img_file in os.listdir(species_path):
                 img_path = os.path.join(species_path, img_file)
                 image_list.append((img_path, label))
-    elif just_other and dominant_set and not binary_classification:
+    elif just_other and dominant_set:
         print("Generating for just 'Other'")
         for species in sorted(os.listdir(dataset_path)):
             if species in dominant_set:
@@ -84,24 +76,8 @@ def collect_images_by_dominance(
             for img_file in os.listdir(species_path):
                 img_path = os.path.join(species_path, img_file)
                 image_list.append((img_path, label))       
-    elif binary_classification and dominant_set and not just_other:
-        for species in sorted(os.listdir(dataset_path)):
-            species_path = os.path.join(dataset_path, species)
-            if not os.path.isdir(species_path):
-                continue
-            if species in dominant_set:
-                for img_file in os.listdir(species_path):
-                    img_path = os.path.join(species_path, img_file)
-                    image_list.append((img_path, BinarySpeciesType.DOMINANT))
-            else:
-                for img_file in os.listdir(species_path):
-                    img_path = os.path.join(species_path, img_file)
-                    image_list.append((img_path, BinarySpeciesType.OTHER))
-        species_dict[BinarySpeciesType.DOMINANT] = "Dominant"
-        species_dict[BinarySpeciesType.OTHER] = "Other"
-    elif binary_classification and just_other:
-        raise PipelineError("Cannot enable both 'binary_classification' and 'just_other' option.")
     else:
+
         # First pass: dominant species
         for species in sorted(os.listdir(dataset_path)):
             species_path = os.path.join(dataset_path, species)
@@ -136,8 +112,7 @@ def collect_images_by_dominance(
 def collect_images(
     data_dir: str,
     dominant_species: Optional[SpeciesDict],
-    just_other: bool = False,
-    binary_classification: bool = False
+    just_other: bool = False
 ) -> Tuple[List[Tuple[str, int]], Dict[int, str], Dict[str, int]]:
     """
     Collects all image paths and assigns labels to species in a dataset directory.
@@ -174,8 +149,7 @@ def collect_images(
                 species_dict,
                 image_list,
                 current_id,
-                just_other,
-                binary_classification
+                just_other
             )
     species_dict = dict(sorted(species_dict.items()))
 
