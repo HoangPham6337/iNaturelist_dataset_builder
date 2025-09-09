@@ -13,7 +13,7 @@ pythonpath = ["src"]
 
 [project]
 name = "dataset_builder_inat"
-version = "1.0.4"
+version = "1.0.7"
 description = "A modular Python toolkit for building, analyzing, and visualizing fine-grained classification datasets from iNaturalist. Includes tools for web crawling, species filtering, class balancing, and manifest generation."
 authors = [{ name = "HoangPham4171", email = "hoangpham4171@gmail.com" }]
 readme = "README.md"
