@@ -41,7 +41,7 @@ def _plot_axh_line(y: float, text: str) -> None:
         text (str): The text annotation to display next to the line.
     """
     plt.axhline(y, color="red", linestyle="--", alpha=0.5)
-    plt.text(0, y, text, va="bottom", ha="left", color="red", fontsize=12)
+    plt.text(0, y, text, va="bottom", ha="left", color="red", fontsize=20)
 
 
 def venn_diagram(
@@ -167,9 +167,9 @@ def _class_composition_bar_chart(
 
     fig, ax = plt.subplots(figsize=(18, min(int(len(labels) * 0.3), 200)))
     ax.barh(labels, image_counts)
-    ax.set_xlabel("Number of images")
-    ax.set_title(f"Species distribution within class: {class_to_analyze}")
-    ax.text(100, len(image_counts) + 1, f"Number of images: {total_images}", fontsize=20)
+    ax.set_xlabel("Number of images", fontsize=22)
+    ax.set_title(f"Species distribution within class: {class_to_analyze}", fontsize=22)
+    ax.text(100, len(image_counts) + 1, f"Total number of images: {total_images}", fontsize=20)
 
     for i, (count, percentage) in enumerate(zip(image_counts, percentages)):
         ax.text(count + 1, i, f"{count} / {percentage:.2f}%", va="center")
@@ -240,9 +240,9 @@ def _visualizing_ppf(
     plt.scatter(species_num, cdf_values[species_num - 1], color="black", zorder=5)
     plt.text(species_num + 1, cdf_values[species_num - 1], f"{species_num} species", fontsize=20, va="top")
 
-    plt.xlabel("Number of species (ranked by image count)", fontsize=20)
-    plt.ylabel("Cumulative percentage of images", fontsize=20)
-    plt.title(f"Cumulative Composition Curve for {class_to_analyze}")
+    plt.xlabel("Number of species (ranked by image count)", fontsize=22)
+    plt.ylabel("Cumulative percentage of images", fontsize=22)
+    plt.title(f"Cumulative Composition Curve for {class_to_analyze}", fontsize=22)
 
     _plot_axh_line(0.5, "50%")
     _plot_axh_line(0.8, "80%")
